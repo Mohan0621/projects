@@ -1,0 +1,16 @@
+import pandas as pd
+from sklearn.neighbors import KNeighborsClassifier
+penguins = pd.read_csv("/content/penguins.csv")
+target_column = "species"
+penguins.dropna(inplace=True)
+model = KNeighborsClassifier(n_neighbors=50)
+model.fit(
+    penguins[["bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"]],
+    penguins[target_column]
+)
+billlength=int(input())
+billdepth=int(input())
+flipperlength=int(input())
+bodymass=int(input())
+a = model.predict([[billlength,billdepth,flipperlength,bodymass]])
+print(a)
