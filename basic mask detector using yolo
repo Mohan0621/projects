@@ -1,0 +1,20 @@
+import torch
+from ultralytics import YOLO
+yaml_content ="""
+train: ./data/dataset/image/train
+val: ./data/dataset/image/val
+test: ./data/dataset/image/test
+nc: 3
+names: ['with_mask', 'without_mask', 'mask_weared_incorrect']
+"""
+with open('data.yaml','w') as f:
+  f.write(yaml_content)
+model.train(
+    data="data.yaml",
+    epochs=30,
+    imgsz=640,
+    batch=16,
+    name="mask_detection"
+            )
+model.val(data="data.yaml")
+results=model.predict(source="./data/dataset/image/val",save=True,conf=0.25)
