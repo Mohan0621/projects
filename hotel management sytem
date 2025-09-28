@@ -1,0 +1,507 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+using namespace std;
+
+struct Reservation {
+    string fullName;
+    string contactNumber;
+    string emailAddress;
+    string idProof;
+
+    int reservationID;
+    string checkInDate;
+    string checkInTime;
+    string checkOutDate;
+    string checkOutTime;
+    int numberOfNights;
+    int adults;
+    int children;
+    string roomType;
+    int roomNumber;
+    int floorNumber;
+
+    string paymentMethod;
+    int advanceDeposit;
+    string billingAddress;
+
+    // Special Requests
+    bool earlyCheckIn;
+    bool lateCheckOut;
+    bool accessibilityRequirements;
+    bool extraBed;
+    bool babyCot;
+    string mealPreference;
+
+    int totalAmount;
+    bool isBooked;
+};
+
+struct Floor {
+    int floorNumber;
+    int singleRooms;
+    int doubleRooms;
+    int suiteRooms;
+    int deluxeRooms;
+    int presidentialRooms;
+};
+
+class HotelManagement {
+private:
+    vector<Reservation> reservations;
+    vector<Floor> floors;
+    int totalRevenue = 0;
+    bool isSetupDone = false; // flag for admin setup
+
+    int totalSingle = 0, totalDouble = 0, totalSuite = 0, totalDeluxe = 0, totalPresidential = 0;
+    int priceSingle = 100, priceDouble = 150, priceSuite = 200, priceDeluxe = 300, pricePresidential = 500;
+
+    int generateReservationID() { 
+        return rand() % 9000 + 1000; 
+    }
+    
+    int generateRoomNumber() { 
+        return rand() % 100 + 1; 
+    }
+    
+    int calculateAmount(string roomType, int days) {
+        if (roomType == "Single") return priceSingle * days;
+        if (roomType == "Double") return priceDouble * days;
+        if (roomType == "Suite") return priceSuite * days;
+        if (roomType == "Deluxe") return priceDeluxe * days;
+        if (roomType == "Presidential") return pricePresidential * days;
+        return 0;
+    }
+    
+    bool isRoomAvailableOnFloor(Floor& f, string roomType) {
+        if (roomType == "Single" && f.singleRooms > 0) return true;
+        if (roomType == "Double" && f.doubleRooms > 0) return true;
+        if (roomType == "Suite" && f.suiteRooms > 0) return true;
+        if (roomType == "Deluxe" && f.deluxeRooms > 0) return true;
+        if (roomType == "Presidential" && f.presidentialRooms > 0) return true;
+        return false;
+    }
+    
+    void reduceRoomCount(Floor& f, string roomType) {
+        if (roomType == "Single") { f.singleRooms--; totalSingle--; }
+        else if (roomType == "Double") { f.doubleRooms--; totalDouble--; }
+        else if (roomType == "Suite") { f.suiteRooms--; totalSuite--; }
+        else if (roomType == "Deluxe") { f.deluxeRooms--; totalDeluxe--; }
+        else if (roomType == "Presidential") { f.presidentialRooms--; totalPresidential--; }
+    }
+    
+    void increaseRoomCount(Floor& f, string roomType) {
+        if (roomType == "Single") { f.singleRooms++; totalSingle++; }
+        else if (roomType == "Double") { f.doubleRooms++; totalDouble++; }
+        else if (roomType == "Suite") { f.suiteRooms++; totalSuite++; }
+        else if (roomType == "Deluxe") { f.deluxeRooms++; totalDeluxe++; }
+        else if (roomType == "Presidential") { f.presidentialRooms++; totalPresidential++; }
+    }
+    
+    bool getYesNoInput(const string& prompt) {
+        string input;
+        while (true) {
+            cout << prompt << " (y/n): ";
+            cin >> input;
+            if (input == "y" || input == "Y") return true;
+            else if (input == "n" || input == "N") return false;
+            else cout << "Invalid input. Please enter 'y' or 'n'.\n";
+        }
+    }
+
+public:
+    // Default setup for when admin hasn't configured the hotel
+    void defaultSetup() {
+        if (isSetupDone) return; // avoid overwriting if already done
+        cout << "\nAdmin has not set up the hotel yet. Using default setup.\n";
+        cout << "Default configuration: 5 floors with 2 rooms of each type per floor.\n";
+        
+        int floorsCount = 5;
+        floors.clear();
+        totalSingle = totalDouble = totalSuite = totalDeluxe = totalPresidential = 0;
+        
+        for (int i = 1; i <= floorsCount; i++) {
+            Floor f;
+            f.floorNumber = i;
+            f.singleRooms = 2;
+            f.doubleRooms = 2;
+            f.suiteRooms = 2;
+            f.deluxeRooms = 2;
+            f.presidentialRooms = 2;
+            
+            totalSingle += f.singleRooms;
+            totalDouble += f.doubleRooms;
+            totalSuite += f.suiteRooms;
+            totalDeluxe += f.deluxeRooms;
+            totalPresidential += f.presidentialRooms;
+            
+            floors.push_back(f);
+        }
+        isSetupDone = true;
+    }
+
+    // Admin functions
+    void setupFloors() {
+        int n;
+        cout << "Enter number of floors in the hotel: ";
+        cin >> n;
+        
+        floors.clear();
+        totalSingle = totalDouble = totalSuite = totalDeluxe = totalPresidential = 0;
+        
+        for (int i = 1; i <= n; i++) {
+            Floor f;
+            f.floorNumber = i;
+            cout << "\n=== Floor " << i << " Setup ===\n";
+            cout << "Enter number of Single rooms: "; cin >> f.singleRooms;
+            cout << "Enter number of Double rooms: "; cin >> f.doubleRooms;
+            cout << "Enter number of Suite rooms: "; cin >> f.suiteRooms;
+            cout << "Enter number of Deluxe rooms: "; cin >> f.deluxeRooms;
+            cout << "Enter number of Presidential rooms: "; cin >> f.presidentialRooms;
+
+            totalSingle += f.singleRooms;
+            totalDouble += f.doubleRooms;
+            totalSuite += f.suiteRooms;
+            totalDeluxe += f.deluxeRooms;
+            totalPresidential += f.presidentialRooms;
+
+            floors.push_back(f);
+        }
+        isSetupDone = true;
+        cout << "Hotel setup completed successfully!\n";
+    }
+
+    void setRoomPrices() {
+        cout << "\n=== Set Room Prices ===\n";
+        cout << "Current prices:\n";
+        cout << "Single: $" << priceSingle << ", Double: $" << priceDouble << ", Suite: $" << priceSuite << "\n";
+        cout << "Deluxe: $" << priceDeluxe << ", Presidential: $" << pricePresidential << "\n\n";
+        
+        cout << "Enter new prices:\n";
+        cout << "Single room price: "; cin >> priceSingle;
+        cout << "Double room price: "; cin >> priceDouble;
+        cout << "Suite room price: "; cin >> priceSuite;
+        cout << "Deluxe room price: "; cin >> priceDeluxe;
+        cout << "Presidential room price: "; cin >> pricePresidential;
+        cout << "Room prices updated successfully!\n";
+    }
+
+    // Customer functions
+    void bookRoom() {
+        if (!isSetupDone) defaultSetup(); // auto setup if admin didn't do it
+
+        if (totalSingle + totalDouble + totalSuite + totalDeluxe + totalPresidential == 0) {
+            cout << "Sorry, no rooms available in the entire hotel.\n";
+            return;
+        }
+
+        string roomTypes[5] = {"Single", "Double", "Suite", "Deluxe", "Presidential"};
+        int roomPrices[5] = {priceSingle, priceDouble, priceSuite, priceDeluxe, pricePresidential};
+        
+        int roomChoice;
+        string chosenType;
+        int chosenFloor;
+
+        // Step 1: Choose room type with global availability check
+        while (true) {
+            cout << "\nSelect room type:\n";
+            for (int i = 0; i < 5; i++) {
+                int available = (i==0)?totalSingle:(i==1)?totalDouble:(i==2)?totalSuite:(i==3)?totalDeluxe:totalPresidential;
+                cout << i+1 << ". " << roomTypes[i] << " (" << available << " available, $" << roomPrices[i] << " per night)\n";
+            }
+            cout << "Enter choice (1-5): ";
+            cin >> roomChoice;
+            
+            if (roomChoice >= 1 && roomChoice <= 5) {
+                int globalAvailable = (roomChoice==1)?totalSingle:(roomChoice==2)?totalDouble:
+                                      (roomChoice==3)?totalSuite:(roomChoice==4)?totalDeluxe:totalPresidential;
+                if (globalAvailable == 0) {
+                    cout << "Sorry, this room type is sold out globally. Choose another type.\n";
+                    continue;
+                }
+                chosenType = roomTypes[roomChoice-1];
+                break;
+            }
+            cout << "Invalid choice.\n";
+        }
+
+        // Step 2: Choose floor where room type is available
+        while (true) {
+            cout << "Enter floor number to book (1-" << floors.size() << "): ";
+            cin >> chosenFloor;
+            
+            if (chosenFloor < 1 || chosenFloor > floors.size()) {
+                cout << "Invalid floor number.\n";
+                continue;
+            }
+            
+            Floor& f = floors[chosenFloor - 1];
+            if (isRoomAvailableOnFloor(f, chosenType)) break;
+
+            cout << "Sorry, " << chosenType << " rooms are not available on floor " << chosenFloor << ".\n";
+            cout << "Would you like to choose another floor? (y/n): ";
+            char ans; cin >> ans;
+            if (ans == 'n' || ans == 'N') return;  // Exit booking
+        }
+
+        Floor& f = floors[chosenFloor - 1];
+
+        Reservation res;
+        res.reservationID = generateReservationID();
+        res.roomType = chosenType;
+        res.floorNumber = chosenFloor;
+        res.roomNumber = generateRoomNumber();
+
+        // Collect guest information
+        cin.ignore();
+        cout << "\n=== Guest Information ===\n";
+        cout << "Enter full name: "; getline(cin, res.fullName);
+        cout << "Enter contact number: "; getline(cin, res.contactNumber);
+        cout << "Enter email address: "; getline(cin, res.emailAddress);
+        cout << "Enter ID proof: "; getline(cin, res.idProof);
+
+        // Collect stay information
+        cout << "\n=== Stay Information ===\n";
+        cout << "Enter check-in date: "; getline(cin, res.checkInDate);
+        cout << "Enter check-in time: "; getline(cin, res.checkInTime);
+        cout << "Enter check-out date: "; getline(cin, res.checkOutDate);
+        cout << "Enter check-out time: "; getline(cin, res.checkOutTime);
+
+        cout << "Enter number of nights: "; cin >> res.numberOfNights;
+        cout << "Enter adults: "; cin >> res.adults;
+        cout << "Enter children: "; cin >> res.children;
+
+        // Payment method
+        cout << "\n=== Payment Information ===\n";
+        cout << "Select payment method:\n1. Credit/Debit Card\n2. Online Wallet\n3. Cash at Hotel\nChoice: ";
+        int payChoice; cin >> payChoice;
+        if (payChoice == 1) res.paymentMethod = "Credit/Debit Card";
+        else if (payChoice == 2) res.paymentMethod = "Online Wallet";
+        else res.paymentMethod = "Cash at Hotel";
+
+        cout << "Enter advance deposit (0 if none): "; cin >> res.advanceDeposit;
+        cin.ignore();
+        cout << "Enter billing address (or leave blank): "; getline(cin, res.billingAddress);
+
+        // Special requests
+        cout << "\n=== Special Requests ===\n";
+        res.earlyCheckIn = getYesNoInput("Do you require early check-in?");
+        res.lateCheckOut = getYesNoInput("Do you require late check-out?");
+        res.accessibilityRequirements = getYesNoInput("Do you have any accessibility requirements?");
+        res.extraBed = getYesNoInput("Do you require an extra bed?");
+        res.babyCot = getYesNoInput("Do you require a baby cot?");
+
+        cout << "Select meal preference:\n1. Veg\n2. Non-Veg\n";
+        int mealChoice;
+        while (true) {
+            cout << "Enter choice (1-2): ";
+            cin >> mealChoice;
+            if (mealChoice == 1 || mealChoice == 2) break;
+            cout << "Invalid choice. Please enter 1 or 2.\n";
+        }
+        res.mealPreference = (mealChoice == 1) ? "Veg" : "Non-Veg";
+
+        res.totalAmount = calculateAmount(res.roomType, res.numberOfNights);
+        res.isBooked = true;
+
+        reservations.push_back(res);
+        totalRevenue += res.totalAmount;
+        reduceRoomCount(f, chosenType);
+
+        // Display booking confirmation
+        cout << "\n===== BOOKING CONFIRMATION =====\n";
+        cout << "Booking successful! Reservation ID: " << res.reservationID << "\n";
+        cout << "Guest Name: " << res.fullName << "\n";
+        cout << "Room Type: " << res.roomType << "\n";
+        cout << "Floor: " << res.floorNumber << "\n";
+        cout << "Room Number: " << res.roomNumber << "\n";
+        cout << "Check-in: " << res.checkInDate << " " << res.checkInTime << "\n";
+        cout << "Check-out: " << res.checkOutDate << " " << res.checkOutTime << "\n";
+        cout << "Total Amount: $" << res.totalAmount << "\n";
+        cout << "Advance Paid: $" << res.advanceDeposit << "\n";
+        cout << "Remaining: $" << (res.totalAmount - res.advanceDeposit) << "\n";
+        cout << "Payment Method: " << res.paymentMethod << "\n";
+        cout << "================================\n";
+    }
+
+    void cancelReservation() {
+        if (!isSetupDone) defaultSetup();
+        
+        int rid;
+        cout << "Enter Reservation ID to cancel: ";
+        cin >> rid;
+        
+        for (auto &res : reservations) {
+            if (res.reservationID == rid && res.isBooked) {
+                res.isBooked = false;
+                totalRevenue -= res.totalAmount;
+                Floor& f = floors[res.floorNumber - 1];
+                increaseRoomCount(f, res.roomType);
+                cout << "Reservation cancelled successfully and room is now available.\n";
+                cout << "Refund amount: $" << res.totalAmount << "\n";
+                return;
+            }
+        }
+        cout << "Reservation not found or already cancelled.\n";
+    }
+
+    void checkRoomAvailability() {
+        if (!isSetupDone) defaultSetup();
+        
+        cout << "\n=== Global Room Availability ===\n";
+        cout << "Single: " << totalSingle << " rooms available ($" << priceSingle << " per night)\n";
+        cout << "Double: " << totalDouble << " rooms available ($" << priceDouble << " per night)\n";
+        cout << "Suite: " << totalSuite << " rooms available ($" << priceSuite << " per night)\n";
+        cout << "Deluxe: " << totalDeluxe << " rooms available ($" << priceDeluxe << " per night)\n";
+        cout << "Presidential: " << totalPresidential << " rooms available ($" << pricePresidential << " per night)\n";
+        cout << "\nTotal available rooms: " << (totalSingle + totalDouble + totalSuite + totalDeluxe + totalPresidential) << "\n";
+    }
+
+    void viewReservations() {
+        if (!isSetupDone) defaultSetup();
+        
+        if (reservations.empty()) {
+            cout << "No reservations found.\n";
+            return;
+        }
+        
+        cout << "\n===== RESERVATIONS LIST =====\n";
+        int activeCount = 0, cancelledCount = 0;
+        
+        for (const auto& res : reservations) {
+            if (res.isBooked) activeCount++;
+            else cancelledCount++;
+            
+            cout << "Reservation ID: " << res.reservationID << "\n";
+            cout << "Guest Name: " << res.fullName << "\n";
+            cout << "Contact Number: " << res.contactNumber << "\n";
+            cout << "Email: " << res.emailAddress << "\n";
+            cout << "ID Proof: " << res.idProof << "\n";
+            cout << "Check-in: " << res.checkInDate << " " << res.checkInTime << "\n";
+            cout << "Check-out: " << res.checkOutDate << " " << res.checkOutTime << "\n";
+            cout << "Nights: " << res.numberOfNights << "\n";
+            cout << "Guests (Adults/Children): " << res.adults << "/" << res.children << "\n";
+            cout << "Room Type: " << res.roomType << "\n";
+            cout << "Room Number: " << res.roomNumber << "\n";
+            cout << "Floor: " << res.floorNumber << "\n";
+            cout << "Payment Method: " << res.paymentMethod << "\n";
+            cout << "Advance Deposit: $" << res.advanceDeposit << "\n";
+            cout << "Billing Address: " << (res.billingAddress.empty() ? "N/A" : res.billingAddress) << "\n";
+            cout << "Meal Preference: " << res.mealPreference << "\n";
+            cout << "Total Amount: $" << res.totalAmount << "\n";
+            cout << "Status: " << (res.isBooked ? "BOOKED" : "CANCELLED") << "\n";
+            cout << "-----------------------------\n";
+        }
+        
+        cout << "\nSummary: " << activeCount << " active reservations, " << cancelledCount << " cancelled\n";
+    }
+
+    void viewRevenue() {
+        cout << "\n=== REVENUE REPORT ===\n";
+        cout << "Total Revenue: $" << totalRevenue << "\n";
+        
+        if (!reservations.empty()) {
+            int totalBookings = 0;
+            for (const auto& res : reservations) {
+                if (res.isBooked) totalBookings++;
+            }
+            cout << "Total Active Bookings: " << totalBookings << "\n";
+            if (totalBookings > 0) {
+                cout << "Average Revenue per Booking: $" << (totalRevenue / totalBookings) << "\n";
+            }
+        }
+    }
+
+    void showFloorLayout() {
+        if (!isSetupDone) defaultSetup();
+        
+        cout << "\n=== HOTEL FLOOR LAYOUT ===\n";
+        for (const auto& floor : floors) {
+            cout << "Floor " << floor.floorNumber << ":\n";
+            cout << "  Single: " << floor.singleRooms << " rooms\n";
+            cout << "  Double: " << floor.doubleRooms << " rooms\n";
+            cout << "  Suite: " << floor.suiteRooms << " rooms\n";
+            cout << "  Deluxe: " << floor.deluxeRooms << " rooms\n";
+            cout << "  Presidential: " << floor.presidentialRooms << " rooms\n";
+            cout << "  Total rooms on floor: " << (floor.singleRooms + floor.doubleRooms + 
+                                                 floor.suiteRooms + floor.deluxeRooms + 
+                                                 floor.presidentialRooms) << "\n\n";
+        }
+    }
+};
+
+int main() {
+    srand(time(0));
+    HotelManagement hotel;
+
+    int roleChoice;
+    do{ 
+    cout << "\n========================================\n";
+    cout << "   Welcome to Hotel Management System   \n";
+    cout << "========================================\n";
+   cout <<  "Select Role:\n";
+    cout << "1. Admin\n";
+    cout << "2. Customer\n";
+    cout<< "3. Exit\n";
+    cout << "Choice: ";
+    cin >> roleChoice;
+    if (roleChoice == 1) { // Admin Menu
+        int choice;
+        do {
+            cout << "\n===== ADMIN MENU =====\n";
+            cout << "1. Setup Hotel Floors\n";
+            cout << "2. Set Room Prices\n";
+            cout << "3. View All Reservations\n";
+            cout << "4. View Revenue Report\n";
+            cout << "5. View Hotel Layout\n";
+            cout << "6. Check Room Availability\n";
+            cout << "7. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+                case 1: hotel.setupFloors(); break;
+                case 2: hotel.setRoomPrices(); break;
+                case 3: hotel.viewReservations(); break;
+                case 4: hotel.viewRevenue(); break;
+                case 5: hotel.showFloorLayout(); break;
+                case 6: hotel.checkRoomAvailability(); break;
+                case 7: cout << "Exiting Admin Panel...\n"; break;
+                default: cout << "Invalid choice. Please try again.\n";
+            }
+        } while (choice != 7);
+    }
+    else if (roleChoice == 2) { // Customer Menu
+        int choice;
+        do {
+            cout << "\n===== CUSTOMER MENU =====\n";
+            cout << "1. Book Room\n";
+            cout << "2. Cancel Reservation\n";
+            cout << "3. Check Room Availability\n";
+            cout << "4. View My Reservations\n";
+            cout << "5. Exit\n";
+            cout << "Enter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+                case 1: hotel.bookRoom(); break;
+                case 2: hotel.cancelReservation(); break;
+                case 3: hotel.checkRoomAvailability(); break;
+                case 4: hotel.viewReservations(); break;
+                case 5: cout << "Thank you for using our service!\n"; break;
+                default: cout << "Invalid choice. Please try again.\n";
+            }
+        } while (choice != 5);
+    }
+    else if(roleChoice==3){
+        cout<<"Exiting From The App"<<endl;
+        break;
+    }
+    else{
+         cout << "Invalid role selected."<<endl;
+    }
+}while(roleChoice!=3);
+    return 0;
+}
