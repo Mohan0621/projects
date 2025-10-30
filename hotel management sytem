@@ -5,6 +5,8 @@
 #include <ctime>
 #include <limits>
 #include <cctype>
+#include <fstream>
+#include <sstream>
 using namespace std;
 struct Reservation {
     string fullName;
@@ -64,33 +66,70 @@ private:
         }
     }
 public:
-    void setfloor(){
-        cout<<"\n=== SET UP FLOORS AND ROOMS ===\n";
-        cout<<"Enter the number of floors in the hotel:"<<endl;
-        int numfloors;
-        cin>>numfloors;
-        floors.clear();
-        totalsingle=totaldouble=totalsuite=totaldeluxe=totalpresidential=0;
-        for(int i=1;i<=numfloors;i++){
-            Floor f;
-            f.floorNumber=i;
-            cout<<"Enter number of Single rooms: "; cin>>f.singleRooms;
-            totalsingle+=f.singleRooms;
-            cout<<endl;
-            cout<<"Enter number of Double rooms: "; cin>>f.doubleRooms;
-            totaldouble+=f.doubleRooms;
-            cout<<endl;
-            cout<<"Enter number of Suite rooms: "; cin>>f.suiteRooms;
-            totalsuite+=f.suiteRooms;
-            cout<<endl;
-            cout<<"Enter number of Deluxe rooms: "; cin>>f.deluxeRooms;
-            totaldeluxe+=f.deluxeRooms;
-            cout<<endl;
-            cout<<"Enter number of Presidential rooms: "; cin>>f.presidentialRooms;
-            totalpresidential+=f.presidentialRooms;
-            cout<<endl;
-            floors.push_back(f);
+    // ====================== FILE HANDLING ======================
+    void saveReservationsToFile() {
+        ofstream out("reservations.txt");
+        if (!out) {
+            cout << "Error opening reservations file for writing!\n";
+            return;
         }
+        for (auto& res : reservations) {
+            out << res.fullName << "|" << res.contactNumber << "|" << res.emailAddress << "|"
+                << res.idProof << "|" << res.reservationID << "|" << res.checkInDate << "|"
+                << res.checkInTime << "|" << res.checkOutDate << "|" << res.checkOutTime << "|"
+                << res.numberOfNights << "|" << res.adults << "|" << res.children << "|"
+                << res.roomType << "|" << res.roomNumber << "|" << res.floorNumber << "|"
+                << res.paymentMethod << "|" << res.advanceDeposit << "|" << res.billingAddress << "|"
+                << res.earlyCheckIn << "|" << res.lateCheckOut << "|" << res.accessibilityRequirements << "|"
+                << res.extraBed << "|" << res.babyCot << "|" << res.mealPreference << "|"
+                << res.totalAmount << "|" << res.isBooked << "\n";
+        }
+        out.close();
+        cout << "Reservations saved to file successfully.\n";
+    }
+
+    void loadReservationsFromFile() {
+        ifstream in("reservations.txt");
+        if (!in) {
+            cout << "No previous reservations found.\n";
+            return;
+        }
+        reservations.clear();
+        string line;
+        while (getline(in, line)) {
+            Reservation res;
+            stringstream ss(line);
+            string temp;
+            getline(ss, res.fullName, '|');
+            getline(ss, res.contactNumber, '|');
+            getline(ss, res.emailAddress, '|');
+            getline(ss, res.idProof, '|');
+            getline(ss, temp, '|'); res.reservationID = stoi(temp);
+            getline(ss, res.checkInDate, '|');
+            getline(ss, res.checkInTime, '|');
+            getline(ss, res.checkOutDate, '|');
+            getline(ss, res.checkOutTime, '|');
+            getline(ss, temp, '|'); res.numberOfNights = stoi(temp);
+            getline(ss, temp, '|'); res.adults = stoi(temp);
+            getline(ss, temp, '|'); res.children = stoi(temp);
+            getline(ss, res.roomType, '|');
+            getline(ss, temp, '|'); res.roomNumber = stoi(temp);
+            getline(ss, temp, '|'); res.floorNumber = stoi(temp);
+            getline(ss, res.paymentMethod, '|');
+            getline(ss, temp, '|'); res.advanceDeposit = stoi(temp);
+            getline(ss, res.billingAddress, '|');
+            getline(ss, temp, '|'); res.earlyCheckIn = stoi(temp);
+            getline(ss, temp, '|'); res.lateCheckOut = stoi(temp);
+            getline(ss, temp, '|'); res.accessibilityRequirements = stoi(temp);
+            getline(ss, temp, '|'); res.extraBed = stoi(temp);
+            getline(ss, temp, '|'); res.babyCot = stoi(temp);
+            getline(ss, res.mealPreference, '|');
+            getline(ss, temp, '|'); res.totalAmount = stoi(temp);
+            getline(ss, temp, '|'); res.isBooked = stoi(temp);
+            reservations.push_back(res);
+        }
+        in.close();
+        cout << "Reservations loaded from file successfully.\n";
     }
     Hotel(const vector<Floor>& hotelFloors) : floors(hotelFloors) {
         srand(time(0));
@@ -167,6 +206,34 @@ public:
             }
         }
         cout<<"Room number "<<roomnumber<<" is available for check-in."<<endl;
+    }
+     void setfloor(){
+        cout<<"\n=== SET UP FLOORS AND ROOMS ===\n";
+        cout<<"Enter the number of floors in the hotel:"<<endl;
+        int numfloors;
+        cin>>numfloors;
+        floors.clear();
+        totalsingle=totaldouble=totalsuite=totaldeluxe=totalpresidential=0;
+        for(int i=1;i<=numfloors;i++){
+            Floor f;
+            f.floorNumber=i;
+            cout<<"Enter number of Single rooms: "; cin>>f.singleRooms;
+            totalsingle+=f.singleRooms;
+            cout<<endl;
+            cout<<"Enter number of Double rooms: "; cin>>f.doubleRooms;
+            totaldouble+=f.doubleRooms;
+            cout<<endl;
+            cout<<"Enter number of Suite rooms: "; cin>>f.suiteRooms;
+            totalsuite+=f.suiteRooms;
+            cout<<endl;
+            cout<<"Enter number of Deluxe rooms: "; cin>>f.deluxeRooms;
+            totaldeluxe+=f.deluxeRooms;
+            cout<<endl;
+            cout<<"Enter number of Presidential rooms: "; cin>>f.presidentialRooms;
+            totalpresidential+=f.presidentialRooms;
+            cout<<endl;
+            floors.push_back(f);
+        }
     }
     void checkoutroom(){
         int roomnumber;
@@ -550,6 +617,7 @@ int main() {
     }
 
     Hotel myHotel(defaultFloors);
+    myHotel.loadReservationsFromFile();
     int choice;
 
     cout << "\n==============================\n";
@@ -625,7 +693,8 @@ int main() {
                 }
             } while (custChoice != 7);
         }
-        else if (choice == 3) {
+       else if (choice == 3) {
+            myHotel.saveReservationsToFile(); // <-- save data before exiting
             cout << "\nThank you for using MOHAN'S HOTEL !\n";
             break;
         }
