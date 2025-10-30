@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <string>
 #include <ctime>
+#include <limits>
+#include <cctype>
 using namespace std;
 struct Reservation {
     string fullName;
@@ -43,7 +45,7 @@ struct Floor {
 class Hotel {
 private:
     int pricesingle=1000,pricedouble=1500,pricesuite=2000,pricedeluxe=3000,pricepresidential=5000;
-    int totalsingle=10,totalsdouble=10,totalsuite=10,totaldeluxe=10,totalpresidential=10;
+    int totalsingle=10,totaldouble=10,totalsuite=10,totaldeluxe=10,totalpresidential=10;
     vector<Reservation> reservations;
     vector<Floor> floors;
     int totalRevenue = 0;
@@ -62,34 +64,21 @@ private:
         }
     }
 public:
-    if(isSetupDone==false){
-        int numfloors=5;
-        for(int i=1;i<=numfloors;i++){
-            Floor f;
-            f.floorNumber=i;
-            f.singleRooms=2;
-            f.doubleRooms=2;
-            f.suiteRooms=2;
-            f.deluxeRooms=2;
-            f.presidentialRooms=2;
-            floors.push_back(f);
-        }
-    }
     void setfloor(){
         cout<<"\n=== SET UP FLOORS AND ROOMS ===\n";
         cout<<"Enter the number of floors in the hotel:"<<endl;
         int numfloors;
         cin>>numfloors;
-        floor.clear();
+        floors.clear();
         totalsingle=totaldouble=totalsuite=totaldeluxe=totalpresidential=0;
-        for(int i=1;i<numsfloors;i++){
+        for(int i=1;i<=numfloors;i++){
             Floor f;
-            f.floorNumber=1;
+            f.floorNumber=i;
             cout<<"Enter number of Single rooms: "; cin>>f.singleRooms;
             totalsingle+=f.singleRooms;
             cout<<endl;
-            cout<<"Enter number of Double rooms: "; cin>>f.doubleRooms; 
-            totalsdouble+=f.doubleRooms;
+            cout<<"Enter number of Double rooms: "; cin>>f.doubleRooms;
+            totaldouble+=f.doubleRooms;
             cout<<endl;
             cout<<"Enter number of Suite rooms: "; cin>>f.suiteRooms;
             totalsuite+=f.suiteRooms;
@@ -139,7 +128,7 @@ public:
         if (lowerType == "single") baseAmount = pricesingle * days;
         else if (lowerType == "double") baseAmount = pricedouble* days;
         else if (lowerType == "suite") baseAmount = pricesuite * days;
-        else if (lowerType == "deluxe") baseAmount = pricedelux * days;
+        else if (lowerType == "deluxe") baseAmount = pricedeluxe * days;
         else if (lowerType == "presidential") baseAmount = pricepresidential* days;
         if (accessibilityRequirements) baseAmount += 200 * days;
         if (extraBed) baseAmount += 500 * days;
@@ -209,6 +198,11 @@ public:
                     floors[floorIndex].deluxeRooms++;
                 else if(roomType=="presidential")
                     floors[floorIndex].presidentialRooms++;
+                if(roomType=="single") totalsingle++;
+                else if(roomType=="double") totaldouble++;
+                else if(roomType=="suite") totalsuite++;
+                else if(roomType=="deluxe") totaldeluxe++;
+                else if(roomType=="presidential") totalpresidential++;
                 cout<<"Room number "<<roomnumber<<" checked out successfully."<<endl;
                 return;
             }
@@ -222,9 +216,7 @@ public:
         cout<<"\n=== SET ROOM PRICES ===\n";
         roomprices();
         cout<<"Wanna Change the prices? (y/n)"<<endl;
-        char ch;
-        cin>>ch;
-        if(getYesNoInput(ch)){
+        if(getYesNoInput("Confirm price change")){
             cout<<"Enter new price for Single rooms: $";
             cin>>pricesingle;
             cout<<"Enter new price for Double rooms: $";
@@ -267,7 +259,10 @@ public:
             cout << "Total Amount: $" << res.totalAmount << "\n";
             cout << "Status: " << (res.isBooked ? "BOOKED" : "CANCELLED") << "\n";
             cout << "-----------------------------\n";
+            return;
         }
+        }
+        cout<<"No active reservation found for this room number.\n";
     }
     void checkflooravailability(){
         int floornumber;
@@ -291,14 +286,14 @@ public:
         cout << "Select room type:\n1. Single\n2. Double\n3. Suite\n4. Deluxe\n5. Presidential\nChoice (1-5): ";
         int roomChoice;
         cin >> roomChoice;
-        cin.ignore(); 
+        cin.ignore();
         string chosenType;
         switch (roomChoice) {
-            case 1: chosenType = "single";totalsingle--; break;
-            case 2: chosenType = "double";totaldouble--; break;
-            case 3: chosenType = "suite";totalsuite--; break;
-            case 4: chosenType = "deluxe";totaldelux--; break;
-            case 5: chosenType = "presidential";totalpresidential--; break;
+            case 1: chosenType = "single"; break;
+            case 2: chosenType = "double"; break;
+            case 3: chosenType = "suite"; break;
+            case 4: chosenType = "deluxe"; break;
+            case 5: chosenType = "presidential"; break;
             default:
                 cout << "Invalid choice.\n";
                 return;
@@ -319,37 +314,15 @@ public:
             cout << "Invalid floor selected.\n";
             return;
         }
-         switch (roomChoice) {
-            case 1: chosenType = "single";
-            if(floors[i].singleRooms<=0){ 
-                cout<<"No single rooms available on floor "<<chosenFloor<<endl;
-                return;
-            }
-            totalsingle++; break;
-            case 2: chosenType = "double";
-            if(floors[i].doubleRooms<=0){ 
-                cout<<"No double rooms available on floor "<<chosenFloor<<endl;
-                return;
-            }
-            totaldouble++; break;
-            case 3: chosenType = "suite";
-            if(floors[i].suiteRooms<=0){ 
-                cout<<"No suite rooms available on floor "<<chosenFloor<<endl;
-                return;
-            }
-            totalsuite++; break;
-            case 4: chosenType = "deluxe";
-            if(floors[i].deluxeRooms<=0){ 
-                cout<<"No deluxe rooms available on floor "<<chosenFloor<<endl;
-                return;
-            }
-            totaldelux--; break;
-            case 5: chosenType = "presidential";
-            if(floors[i].presidentialRooms<=0){ 
-                cout<<"No presidential rooms available on floor "<<chosenFloor<<endl;
-                return;
-            }
-            totalpresidential++; break;
+        // Availability check on chosen floor
+        const Floor& ff = floors[floorIndex];
+        if ((chosenType=="single" && ff.singleRooms<=0) ||
+            (chosenType=="double" && ff.doubleRooms<=0) ||
+            (chosenType=="suite" && ff.suiteRooms<=0) ||
+            (chosenType=="deluxe" && ff.deluxeRooms<=0) ||
+            (chosenType=="presidential" && ff.presidentialRooms<=0)){
+            cout<<"No rooms of selected type available on floor "<<chosenFloor<<"\n";
+            return;
         }
         Reservation res;
         res.reservationID = generateReservationID();
@@ -421,6 +394,11 @@ public:
         reservations.push_back(res);
         totalRevenue += res.totalAmount;
         reduceRoomCount(floorIndex, chosenType);
+        if(chosenType=="single") totalsingle--;
+        else if(chosenType=="double") totaldouble--;
+        else if(chosenType=="suite") totalsuite--;
+        else if(chosenType=="deluxe") totaldeluxe--;
+        else if(chosenType=="presidential") totalpresidential--;
         cout << "\n===== BOOKING CONFIRMATION =====\n";
         cout << "Booking successful! Reservation ID: " << res.reservationID << "\n";
         cout << "Guest Name: " << res.fullName << "\n";
@@ -443,60 +421,48 @@ public:
         int choice;
         cin>>choice;
         if(choice==1){
-            int roomnuber;
-                cout<<"enter room number to cancel reservation:"<<endl;
-                cin>>roomnumber;
-            for(auto res:Reservation){
-                if(res.roomnumber==roomnumber){
+            int roomnumber;
+            cout<<"enter room number to cancel reservation:"<<endl;
+            cin>>roomnumber;
+            for(auto& res: reservations){
+                if(res.roomNumber==roomnumber && res.isBooked){
                     res.isBooked=false;
                     cout<<"reservation cancelled successfully for room number "<<roomnumber<<endl;
                     int f=res.floorNumber;
                     string roomType=res.roomType;
-                    if(roomType=="single"){
-                        floor[f-1].singleRooms++;
-                    }
-                    else if (roomType=="double"){
-                        floor[f-1].doubleRooms++;
-                    }
-                    else if (roomType=="suite"){
-                        floor[f-1].suiteRooms++;
-                    }
-                    else if (roomType=="delux"){
-                        floor[f-1].deluxRooms++;
-                    }
-                    else if(roomType=="presidential"){
-                        floor[f-1].presidentialRooms++;
-                    }
+                    for(size_t i=0;i<floors.size();++i){ if(floors[i].floorNumber==f){
+                        if(roomType=="single"){ floors[i].singleRooms++; totalsingle++; }
+                        else if (roomType=="double"){ floors[i].doubleRooms++; totaldouble++; }
+                        else if (roomType=="suite"){ floors[i].suiteRooms++; totalsuite++; }
+                        else if (roomType=="deluxe"){ floors[i].deluxeRooms++; totaldeluxe++; }
+                        else if(roomType=="presidential"){ floors[i].presidentialRooms++; totalpresidential++; }
+                        break; }}
+                    return;
                 }
             }
+            cout<<"No active reservation found for that room number.\n";
         }
         else if(choice ==2){
-             int reservationid;
-                cout<<"enter reservation ID to cancel reservation:"<<endl;
-                cin>>reservationid;
-            for(auto res:Reservation){
-                if(res.reservationID== reservationid){
+            int reservationid;
+            cout<<"enter reservation ID to cancel reservation:"<<endl;
+            cin>>reservationid;
+            for(auto& res: reservations){
+                if(res.reservationID== reservationid && res.isBooked){
                     res.isBooked=false;
-                    cout<<"reservation cancelled successfully for room number "<<roomnumber<<endl;
+                    cout<<"reservation cancelled successfully for reservation ID "<<reservationid<<endl;
                     int f=res.floorNumber;
                     string roomType=res.roomType;
-                    if(roomType=="single"){
-                        floor[f-1].singleRooms++;
-                    }
-                    else if (roomType=="double"){
-                        floor[f-1].doubleRooms++;
-                    }
-                    else if (roomType=="suite"){
-                        floor[f-1].suiteRooms++;
-                    }
-                    else if (roomType=="delux"){
-                        floor[f-1].deluxRooms++;
-                    }
-                    else if(roomType=="presidential"){
-                        floor[f-1].presidentialRooms++;
-                    }
+                    for(size_t i=0;i<floors.size();++i){ if(floors[i].floorNumber==f){
+                        if(roomType=="single"){ floors[i].singleRooms++; totalsingle++; }
+                        else if (roomType=="double"){ floors[i].doubleRooms++; totaldouble++; }
+                        else if (roomType=="suite"){ floors[i].suiteRooms++; totalsuite++; }
+                        else if (roomType=="deluxe"){ floors[i].deluxeRooms++; totaldeluxe++; }
+                        else if(roomType=="presidential"){ floors[i].presidentialRooms++; totalpresidential++; }
+                        break; }}
+                    return;
                 }
             }
+            cout<<"No active reservation found for that reservation ID.\n";
         }
         else{
             cout<<"invalid choice"<<endl;
@@ -569,9 +535,9 @@ public:
             }
         }
     }
-};int main() {
+};
+int main() {
     vector<Floor> defaultFloors;
-    // Initialize 5 floors with 2 rooms each (just for starting)
     for (int i = 1; i <= 5; ++i) {
         Floor f;
         f.floorNumber = i;
@@ -599,11 +565,11 @@ public:
         cin >> choice;
         if (choice == 1) {
             string password;
-            cout << "Enter admin password: ";
+            pass: cout << "Enter admin password: ";
             cin >> password;
             if (password != "admin123") {
                 cout << "Invalid password!\n";
-                continue;
+                goto pass;
             }
             int adminChoice;
             do {
